@@ -5,7 +5,7 @@
 void param_sfo::param_sfo_file::read_header(std::ifstream& in_stream) {
  byte buffer[4];
  //read magic
- in_stream.seekg(0, std::ios::beg); 
+ in_stream.seekg(0, std::ios::beg);
  in_stream.read((char*) buffer, 4);
  this->header.magic = to_uint(buffer, 4);
  if(this->header.magic != this->MAGIC) throw std::invalid_argument("Invalid PARAM.SFO file");
@@ -84,17 +84,18 @@ void param_sfo::param_sfo_file::read_param_entry(std::ifstream& in_stream, index
    param_entry.datum_len = 0;
  }
  for(uint i = 0; i < param_entry.datum_len; i++) param_entry.data_table_entry += in_stream.get();
+ param_entry.data_table_entry.erase(remove(param_entry.data_table_entry.begin(), param_entry.data_table_entry.end(), '\0'), param_entry.data_table_entry.end());
 }
 
 void param_sfo::param_sfo_file::read_param_table(std::ifstream& in_stream) {
- for(uint i = 0; i < this->index_table.entries.size(); i++) {
+ for(index_table_entry_t index_table_entry : this->index_table.entries) {
   param_entry_t param_entry;
-  this->read_param_entry(in_stream, this->index_table.entries[i], param_entry);
+  this->read_param_entry(in_stream, index_table_entry, param_entry);
   this->param_table.entries.push_back(param_entry);
  }
 }
 
-//PARAM.SFO numbers are stored as little-endian byte arrays, so we need to translate them to big-endian integers
+//PARAM.SFO numbers are stored as little-endian byte arrays, so it is necessary to translate them to big-endian
 uint param_sfo::param_sfo_file::to_uint(byte LE_array[], int size) {
  uint num = 0;
  for(int i = size - 1; i >= 0; i--) num = (num << 8) + LE_array[i];
@@ -113,9 +114,10 @@ param_sfo::param_sfo_file::param_sfo_file(std::string& path) {
 }
 
 void param_sfo::param_sfo_file::print(std::ostream& out_stream) {
- for(uint i = 0; i < this->param_table.entries.size(); i++) {
-  param_entry_t param_entry = this->param_table.entries[i];
-  out_stream << param_entry.keys_table_entry + " - Len: " + std::to_string(param_entry.datum_len) + " - Fmt: " + param_entry.datum_fmt << std::endl;
+ out_stream << "PATH" << std::endl << this->path << std::endl << std::endl;
+ out_stream << "SFO VERSION" << std::endl << this->header.version << std::endl << std::endl;
+ for(param_entry_t param_entry : this->param_table.entries) {
+  out_stream << param_entry.keys_table_entry + " - Fmt: " + param_entry.datum_fmt << std::endl;
   out_stream << param_entry.data_table_entry << std::endl << std::endl;
  }
 }
