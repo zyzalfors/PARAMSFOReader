@@ -27,7 +27,7 @@ void param_sfo::param_sfo_file::read_header(std::ifstream& in_stream) {
  this->header.tables_entries = to_uint(buffer, 4);
 }
 
-void param_sfo::param_sfo_file::read_index_table_entry(std::ifstream& in_stream, index_table_entry& index_table_entry, uint i) {
+void param_sfo::param_sfo_file::read_index_table_entry(std::ifstream& in_stream, uint i, index_table_entry_t& index_table_entry) {
  byte buffer[4];
  //read key_offset
  in_stream.seekg(20 + 16 * i, std::ios::beg);
@@ -53,9 +53,44 @@ void param_sfo::param_sfo_file::read_index_table_entry(std::ifstream& in_stream,
 
 void param_sfo::param_sfo_file::read_index_table(std::ifstream& in_stream) {
  for(uint i = 0; i < this->header.tables_entries; i++) {
-  index_table_entry index_table_entry;
-  read_index_table_entry(in_stream, index_table_entry, i);
+  index_table_entry_t index_table_entry;
+  this->read_index_table_entry(in_stream, i, index_table_entry);
   this->index_table.entries.push_back(index_table_entry);
+ }
+}
+
+void param_sfo::param_sfo_file::read_param_entry(std::ifstream& in_stream, index_table_entry_t& index_table_entry, param_entry_t& param_entry) {
+ //read key of current entry
+ in_stream.seekg(index_table_entry.key_offset + this->header.keys_table_offset, std::ios::beg);
+ while(in_stream.peek() != '\0') param_entry.keys_table_entry += in_stream.get();
+ param_entry.key_len = param_entry.keys_table_entry.size();
+ //read datum of current entry
+ in_stream.seekg(index_table_entry.datum_offset + this->header.data_table_offset, std::ios::beg);
+ switch(index_table_entry.datum_fmt) {
+  case fmt::utf8:
+   param_entry.datum_fmt = "utf8";
+   param_entry.datum_len = index_table_entry.datum_len;
+   break;
+  case fmt::utf8null:
+   param_entry.datum_fmt = "utf8null";
+   param_entry.datum_len = index_table_entry.datum_len;
+   break;
+  case fmt::uint32:
+   param_entry.datum_fmt = "uint32";
+   param_entry.datum_len = 4;
+   break;
+  default:
+   param_entry.datum_fmt = "";
+   param_entry.datum_len = 0;
+ }
+ for(uint i = 0; i < param_entry.datum_len; i++) param_entry.data_table_entry += in_stream.get();
+}
+
+void param_sfo::param_sfo_file::read_param_table(std::ifstream& in_stream) {
+ for(uint i = 0; i < this->index_table.entries.size(); i++) {
+  param_entry_t param_entry;
+  this->read_param_entry(in_stream, this->index_table.entries[i], param_entry);
+  this->param_table.entries.push_back(param_entry);
  }
 }
 
@@ -71,26 +106,16 @@ param_sfo::param_sfo_file::param_sfo_file(std::string& path) {
  this->path = path;
  std::ifstream in_stream(this->path, std::ios::in | std::ios::binary);
  if(!in_stream.is_open()) throw std::invalid_argument("File not found");
- read_header(in_stream);
- read_index_table(in_stream);
+ this->read_header(in_stream);
+ this->read_index_table(in_stream);
+ this->read_param_table(in_stream);
  in_stream.close();
 }
 
 void param_sfo::param_sfo_file::print(std::ostream& out_stream) {
- std::ifstream in_stream(this->path, std::ios::in | std::ios::binary);
- if(!in_stream.is_open()) throw std::invalid_argument("File not found");
- //iterate over all entries
- for(uint i = 0; i < this->index_table.entries.size(); i++) {
-  std::string data;
-  index_table_entry index_table_entry = this->index_table.entries[i];
-  //read key value of current entry
-  in_stream.seekg(index_table_entry.key_offset + this->header.keys_table_offset, std::ios::beg);
-  while(in_stream.peek() != 0) data += (byte) in_stream.get();
-  data += " - Length: " + std::to_string(index_table_entry.datum_max_len) + " - Type: " + std::to_string(index_table_entry.datum_fmt) + "\n";
-  //read datum value of current entry
-  in_stream.seekg(index_table_entry.datum_offset + this->header.data_table_offset, std::ios::beg);
-  for(uint k = 0; k < index_table_entry.datum_max_len; k++) data += (byte) in_stream.get();
-  out_stream << data << std::endl << std::endl;
+ for(uint i = 0; i < this->param_table.entries.size(); i++) {
+  param_entry_t param_entry = this->param_table.entries[i];
+  out_stream << param_entry.keys_table_entry + " - Len: " + std::to_string(param_entry.datum_len) + " - Fmt: " + param_entry.datum_fmt << std::endl;
+  out_stream << param_entry.data_table_entry << std::endl << std::endl;
  }
- in_stream.close();
 }

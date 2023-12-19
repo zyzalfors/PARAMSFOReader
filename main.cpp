@@ -16,12 +16,10 @@ int main(int argc, char* argv[]) {
   if(out_path.size() > 0) {
    std::ofstream out_stream(out_path, std::ofstream::out);
    if(!out_stream.is_open()) throw std::invalid_argument("Unable to open output file");
-   out_stream << "PATH" << std::endl << in_path << std::endl << std::endl;
    sfo_file.print(out_stream);
    out_stream.close();
   }
   else {
-   std::cout << "PATH" << std::endl << in_path << std::endl << std::endl;
    sfo_file.print(std::cout);
   }
  }
