@@ -5,7 +5,7 @@
 
 int main(int argc, char* argv[]) {
  try {
-  if(argc > 3) throw std::invalid_argument("Invalid command");
+  if(argc > 4) throw std::invalid_argument("Invalid command");
   std::string in_path, out_path;
   bool hex_format = false;
   for(int i = 1; i < argc; i++) {
