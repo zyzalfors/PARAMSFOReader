@@ -1,6 +1,7 @@
 #include "param_sfo.h"
 #include <stdexcept>
 #include <algorithm>
+#include <iomanip>
 
 void param_sfo::param_sfo_file::read_header(std::ifstream& in_stream) {
  byte buffer[4];
@@ -113,11 +114,18 @@ param_sfo::param_sfo_file::param_sfo_file(std::string& path) {
  in_stream.close();
 }
 
-void param_sfo::param_sfo_file::print(std::ostream& out_stream) {
+void param_sfo::param_sfo_file::print(std::ostream& out_stream, bool hex_format) {
  out_stream << "PATH" << std::endl << this->path << std::endl << std::endl;
- out_stream << "SFO VERSION" << std::endl << this->header.version << std::endl << std::endl;
+ out_stream << "SFO VERSION" << std::endl;
+ if(!hex_format) out_stream << this->header.version << std::endl << std::endl;
+ else out_stream << std::hex << std::setfill('0') << std::setw(4) << std::uppercase << this->header.version << std::endl << std::endl;
  for(param_entry_t param_entry : this->param_table.entries) {
   out_stream << param_entry.keys_table_entry + " - Fmt: " + param_entry.datum_fmt << std::endl;
-  out_stream << param_entry.data_table_entry << std::endl << std::endl;
+  if(!hex_format) out_stream << param_entry.data_table_entry << std::endl << std::endl;
+  else {
+   for(size_t i = 0; i < param_entry.data_table_entry.size(); i++)
+    out_stream << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << static_cast<uint>(param_entry.data_table_entry[i]);
+   out_stream << std::endl << std::endl;
+  }
  }
 }

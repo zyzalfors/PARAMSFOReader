@@ -73,7 +73,7 @@ namespace param_sfo {
    index_table_t index_table;
    param_table_t param_table;
    param_sfo_file(std::string& path);
-   void print(std::ostream& out_stream);
+   void print(std::ostream& out_stream, bool hex_format);
  };
 
 }
