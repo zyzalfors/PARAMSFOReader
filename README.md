@@ -10,4 +10,4 @@ Other useful repositories for reading and manipulating PARAM.SFO files include:
 - https://github.com/KuromeSan/sfo.js
 - https://github.com/KuromeSan/Sfo.NET
 - https://github.com/xXxTheDarkprogramerxXx/SFOExtract
-- https://github.com/Jappi88/Dark-Souls-II-SE.
+- https://github.com/Jappi88/Dark-Souls-II-SE
