@@ -1,4 +1,5 @@
 #include "param_sfo.h"
+#include <iostream>
 #include <stdexcept>
 #include <algorithm>
 #include <iomanip>
@@ -10,7 +11,8 @@ void param_sfo::param_sfo_file::read_header(std::ifstream& in_stream) {
     in_stream.seekg(0, std::ios::beg);
     in_stream.read((char*) buffer, 4);
     this->header.magic = to_uint(buffer, 4);
-    if(this->header.magic != this->MAGIC) throw std::invalid_argument("Invalid PARAM.SFO file");
+    if(this->header.magic != this->MAGIC)
+        throw std::invalid_argument("Invalid PARAM.SFO file");
 
     //read version
     in_stream.seekg(4, std::ios::beg);

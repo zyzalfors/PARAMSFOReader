@@ -58,13 +58,13 @@ namespace param_sfo {
     } param_table_t;
 
     class param_sfo_file {
-        private: const uint MAGIC = 0x46535000;
+        private: const static uint MAGIC = 0x46535000;
         private: void read_header(std::ifstream& in_stream);
         private: void read_index_table_entry(std::ifstream& in_stream, const uint& i, index_table_entry_t& index_table_entry);
         private: void read_index_table(std::ifstream& in_stream);
         private: void read_param_entry(std::ifstream& in_stream, index_table_entry_t& index_table_entry, param_entry_t& param_entry);
         private: void read_param_table(std::ifstream& in_stream);
-        private: uint to_uint(byte LE_array[], const int& size);
+        private: static uint to_uint(byte LE_array[], const int& size);
 
         public: std::string path;
         public: header_t header;
